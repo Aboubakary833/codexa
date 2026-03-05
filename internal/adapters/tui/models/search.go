@@ -29,7 +29,7 @@ var (
 				BorderForeground(styles.TextColor)
 
 	emptySearchListStyle = lipgloss.NewStyle().
-				SetString("No available entry found").
+				SetString("No available snippet entry found").
 				MarginLeft(1)
 
 	noMatchingEntryStyle = lipgloss.NewStyle().
