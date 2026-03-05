@@ -76,20 +76,21 @@ func (app *app) GetSnippetContent(ctx context.Context, snippet domain.Snippet) (
 
 // Search take a non empty input string, make a search to the repository and return a slice of Snippets
 func (app *app) Search(ctx context.Context, input string) ([]domain.Snippet, error) {
-	if input == "" {
+	tech, topic := app.ParseSearchInput(input)
+
+	if tech == "" {
 		return app.snippetRepository.FindAll(ctx)
 	}
-	tech, topic := app.ParseSearchInput(input)
 
 	return app.snippetRepository.Search(ctx, tech, topic)
 }
 
 // ParseSearchInput parse a provided input string into tech category and topic
 func (app *app) ParseSearchInput(input string) (tech, topic string) {
-	input = strings.TrimLeft(input, " /")
+	input = strings.Trim(input, " /")
 
 	if input == "" {
-		return "", ""
+		return
 	}
 
 	if strings.Contains(input, " ") {

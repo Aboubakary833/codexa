@@ -79,7 +79,7 @@ type SearchModel struct {
 func NewSearchModel() SearchModel {
 	searchInput := textinput.New()
 
-	searchInput.Placeholder = "ex: go/slice, php arrays..."
+	searchInput.Placeholder = "ex: go/context-timeout, php arrays..."
 	searchInput.Focus()
 
 	delegate := &common.Delegate{

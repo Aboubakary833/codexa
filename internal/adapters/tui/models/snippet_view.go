@@ -170,6 +170,12 @@ func (m SnippetViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.Height = msg.Height - verticalMarginHeight
 		}
 
+		if m.width < 50 {
+			m.viewport.SetHorizontalStep(1)
+		} else {
+			m.viewport.SetHorizontalStep(0)
+		}
+
 		return m, nil
 	}
 

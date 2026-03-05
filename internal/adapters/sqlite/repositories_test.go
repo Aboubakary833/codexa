@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"testing"
-	"time"
 
 	"github.com/aboubakary833/codexa/internal/adapters/sqlite/migrate"
 	"github.com/aboubakary833/codexa/internal/domain"
+	testutils "github.com/aboubakary833/codexa/utils/tests"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
@@ -46,8 +46,8 @@ func TestRepositories(t *testing.T) {
 		}
 	})
 
-	categories := getTestCategories()
-	snippets := getTestSnippets()
+	categories := testutils.GetCategories()
+	snippets := testutils.GetSnippets()
 
 	t.Run("techRepository Store method should store tech categories", func(t *testing.T) {
 		for _, category := range categories {
@@ -201,82 +201,3 @@ func assertEntriesEqual(t *testing.T, expected, actual domain.Snippet) bool {
 		assert.True(expected.UpdatedAt.Equal(actual.UpdatedAt))
 }
 
-func getTestCategories() []domain.Tech {
-	return []domain.Tech{
-		{
-			ID:   "go",
-			Name: "Go",
-			Aliases: []domain.TechAlias{
-				{ID: "golang", TechID: "go", Name: "Golang"},
-			},
-		},
-		{
-			ID:   "javascript",
-			Name: "JavaScript",
-			Aliases: []domain.TechAlias{
-				{ID: "js", TechID: "javascript", Name: "JS"},
-				{ID: "nodejs", TechID: "javascript", Name: "NodeJS"},
-			},
-		},
-		{
-			ID:      "php",
-			Name:    "PHP",
-			Aliases: []domain.TechAlias{},
-		},
-	}
-}
-
-func getTestSnippets() []domain.Snippet {
-	now := time.Now()
-
-	return []domain.Snippet{
-		{
-			ID:        "go:slices",
-			TechID:    "go",
-			Topic:     "slices",
-			Filepath:  "go/slices.md",
-			CreatedAt: now,
-			UpdatedAt: now,
-		},
-		{
-			ID:        "go:maps",
-			TechID:    "go",
-			Topic:     "maps",
-			Filepath:  "go/maps.md",
-			CreatedAt: now,
-			UpdatedAt: now,
-		},
-		{
-			ID:        "javascript:arrays",
-			TechID:    "javascript",
-			Topic:     "Arrays",
-			Filepath:  "js/arrays.md",
-			CreatedAt: now,
-			UpdatedAt: now,
-		},
-		{
-			ID:        "javascript:objects",
-			TechID:    "javascript",
-			Topic:     "Objects",
-			Filepath:  "js/objects.md",
-			CreatedAt: now,
-			UpdatedAt: now,
-		},
-		{
-			ID:        "php:classes",
-			TechID:    "php",
-			Topic:     "Classes",
-			Filepath:  "php/classes.md",
-			CreatedAt: now,
-			UpdatedAt: now,
-		},
-		{
-			ID:        "php:enums",
-			TechID:    "php",
-			Topic:     "Enums",
-			Filepath:  "php/enums.md",
-			CreatedAt: now,
-			UpdatedAt: now,
-		},
-	}
-}

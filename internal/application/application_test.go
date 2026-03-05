@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestApp(t *testing.T) {
+func TestMethodsWithRepositoriesCall(t *testing.T) {
 	snippetRepository := mocks.NewSnippetRepository()
 	techRepository := mocks.NewTechRepository()
 	registry := mocks.NewRegistry()
@@ -24,21 +24,23 @@ func TestApp(t *testing.T) {
 				ID:   "go",
 				Name: "Go",
 				Aliases: []domain.TechAlias{
-					{ID: "golang", TechID: "go"},
+					{ID: "golang", TechID: "go", Name: "Golang"},
 				},
 			},
 			{
 				ID:   "javascript",
 				Name: "JavaScript",
 				Aliases: []domain.TechAlias{
-					{ID: "js", TechID: "javascript"},
-					{ID: "nodejs", TechID: "javascript"},
+					{ID: "js", TechID: "javascript", Name: "JS"},
+					{ID: "nodejs", TechID: "javascript", Name: "NodeJS"},
 				},
 			},
 			{
-				ID:      "php",
-				Name:    "PHP",
-				Aliases: []domain.TechAlias{},
+				ID:   "php",
+				Name: "PHP",
+				Aliases: []domain.TechAlias{
+					{ID: "php8", TechID: "php", Name: "PHP8"},
+				},
 			},
 		}
 		techRepository.On("FindAll", ctx).Return(categories, nil).Once()
@@ -54,16 +56,16 @@ func TestApp(t *testing.T) {
 	t.Run("ListSnippets should return a given tech category snippets", func(t *testing.T) {
 		entries := []domain.Snippet{
 			{
-				ID:         "go:slices",
-				TechID: "go",
-				Topic:      "slices",
-				Filepath:   "go/slices.md",
+				ID:       "go:slices",
+				TechID:   "go",
+				Topic:    "slices",
+				Filepath: "go/slices.md",
 			},
 			{
-				ID:         "go:maps",
-				TechID: "go",
-				Topic:      "maps",
-				Filepath:   "go/maps.md",
+				ID:       "go:maps",
+				TechID:   "go",
+				Topic:    "maps",
+				Filepath: "go/maps.md",
 			},
 		}
 
@@ -79,10 +81,10 @@ func TestApp(t *testing.T) {
 
 	t.Run("GetSnippetContent should load go slices entry", func(t *testing.T) {
 		entry := domain.Snippet{
-			ID:         "go:slices",
-			TechID: "go",
-			Topic:      "slices",
-			Filepath:   "go/slices.md",
+			ID:       "go:slices",
+			TechID:   "go",
+			Topic:    "slices",
+			Filepath: "go/slices.md",
 		}
 
 		content := "This is slices entry content"
@@ -128,7 +130,7 @@ func TestApp(t *testing.T) {
 
 }
 
-func TestParseSearchInput(t *testing.T) {
+func TestParseSearchInputMethod(t *testing.T) {
 	app := New(nil, nil, nil)
 
 	tests := []struct {

@@ -52,6 +52,12 @@ type Registry interface {
 }
 
 type Fetcher interface {
-	// PullContent pull a specific snippet content from the remote registry
-	PullContent(ctx context.Context, snippetPath string) (string, error)
+	// PullManifest pull the tech manifest from the remote registry
+	PullManifest(context.Context) (domain.Manifest, error)
+
+	// PullTechSnippets pull a given tech category snippets list from the remote repository
+	PullTechSnippets(context.Context, string) ([]domain.RemoteSnippet, error)
+
+	// PullSnippetContent pull a specific snippet content from the remote registry
+	PullSnippetContent(ctx context.Context, snippetPath string) (string, error)
 }
