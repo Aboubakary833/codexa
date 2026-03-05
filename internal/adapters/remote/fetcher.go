@@ -3,6 +3,8 @@ package remote
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -26,7 +28,7 @@ func NewFetcher(remoteUrl string) fetcher {
 
 // PullManifest get remote registry manifest
 func (f fetcher) PullManifest(ctx context.Context) (domain.Manifest, error) {
-	res, err := f.doHttpGetRequest(ctx, "/registry.json")
+	res, err := f.doHttpGetRequest(ctx, "/registry.json", domain.ErrManifestNotFound)
 
 	if err != nil {
 		return domain.Manifest{}, err
@@ -43,17 +45,35 @@ func (f fetcher) PullManifest(ctx context.Context) (domain.Manifest, error) {
 	return manifest, nil
 }
 
-// PullContent pull a specific entry content from the remote registry
-func (f fetcher) PullContent(ctx context.Context, entryPath string) (string, error) {
-	res, err := f.doHttpGetRequest(ctx, entryPath)
+func (f fetcher) PullTechSnippets(ctx context.Context, tech string) ([]domain.RemoteSnippet, error) {
+	path := fmt.Sprintf("/%s/index.json", tech)
+	res, err := f.doHttpGetRequest(ctx, path, domain.ErrRemoteTechNotFound)
+
+	if err != nil {
+		return []domain.RemoteSnippet{}, err
+	}
+	defer res.Body.Close()
+
+	decoder := json.NewDecoder(res.Body)
+	var snippets []domain.RemoteSnippet
+
+	if err = decoder.Decode(&snippets); err != nil {
+		return []domain.RemoteSnippet{}, err
+	}
+
+	return snippets, nil
+}
+
+// PullSnippetContent pull a specific snippet content from the remote registry
+func (f fetcher) PullSnippetContent(ctx context.Context, snippetUrl string) (string, error) {
+	res, err := f.doHttpGetRequest(ctx, snippetUrl, domain.ErrRemoteSnippetNotFound)
 
 	if err != nil {
 		return "", err
 	}
 	defer res.Body.Close()
 
-	var rawBytes []byte
-	_, err = res.Body.Read(rawBytes)
+	rawBytes, err := io.ReadAll(res.Body)
 
 	if err != nil {
 		return "", err
@@ -63,7 +83,7 @@ func (f fetcher) PullContent(ctx context.Context, entryPath string) (string, err
 }
 
 // doHttpGetRequest is a util function for fetcher http GET requests
-func (f fetcher) doHttpGetRequest(ctx context.Context, path string) (*http.Response, error) {
+func (f fetcher) doHttpGetRequest(ctx context.Context, path string, notFoundError error) (*http.Response, error) {
 	url, err := url.JoinPath(f.url, path)
 
 	if err != nil {
@@ -77,5 +97,15 @@ func (f fetcher) doHttpGetRequest(ctx context.Context, path string) (*http.Respo
 	}
 
 	req.Header.Set("User-Agent", "codexa/1.0")
-	return f.client.Do(req)
+	res, err := f.client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode == http.StatusNotFound {
+		return nil, notFoundError
+	}
+
+	return res, nil
 }
