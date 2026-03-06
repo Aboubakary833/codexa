@@ -3,8 +3,10 @@ package remote
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"time"
@@ -96,15 +98,30 @@ func (f fetcher) doHttpGetRequest(ctx context.Context, path string, notFoundErro
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", "codexa/1.0")
+	req.Header.Set("User-Agent", "codexa-cli/1.0")
+	req.Header.Set("Accept", "application/vnd.github.raw")
 	res, err := f.client.Do(req)
 
 	if err != nil {
+		var netErr net.Error
+
+		if errors.As(err, &netErr) && netErr.Timeout() {
+			return nil, fmt.Errorf("request timed out")
+		}
+
 		return nil, err
 	}
 
-	if res.StatusCode == http.StatusNotFound {
+	switch res.StatusCode {
+	case http.StatusNotFound:
 		return nil, notFoundError
+
+	case http.StatusBadRequest:
+		return nil, fmt.Errorf("invalid request")
+	}
+
+	if res.StatusCode > 400 {
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
 	}
 
 	return res, nil

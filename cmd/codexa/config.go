@@ -4,7 +4,7 @@ import "path/filepath"
 
 var (
 	dbname            = "database.sqlite"
-	remoteRegistryUrl = "https://raw.githubusercontent.com/cx-registry/main"
+	remoteRegistryUrl = "https://raw.githubusercontent.com/aboubakary833/cx-registry/main"
 )
 
 // Config is Codexa environment config struct.

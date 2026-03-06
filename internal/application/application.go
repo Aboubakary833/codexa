@@ -13,6 +13,7 @@ type app struct {
 	snippetRepository ports.SnippetRepository
 	techRepository    ports.TechRepository
 	registry          ports.Registry
+	fetcher			  ports.Fetcher
 }
 
 func New(
@@ -83,6 +84,11 @@ func (app *app) Search(ctx context.Context, input string) ([]domain.Snippet, err
 	}
 
 	return app.snippetRepository.Search(ctx, tech, topic)
+}
+
+func (app *app) SyncSnippet(ctx context.Context, snippet domain.Snippet) error {
+	
+	return nil
 }
 
 // ParseSearchInput parse a provided input string into tech category and topic
