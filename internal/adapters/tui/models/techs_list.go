@@ -14,7 +14,7 @@ import (
 var (
 	cmdStyle = lipgloss.NewStyle().
 			Foreground(styles.SecondaryColor).
-			SetString("codexa pull")
+			SetString("`codexa sync <category>`")
 )
 
 // LoadTechsMsg request the listing of tech categories
@@ -119,8 +119,8 @@ func (m TechsListModel) emptyListView() string {
 	emptyListView := lipgloss.NewStyle().Width(m.list.Width()).
 		Height(m.list.Height() - verticalMargin - 1).
 		MarginTop(1).Render(
-			"No snippet tech category found.",
-			"\nRun", cmdStyle.Render(), "to fetch a tech category of snippets.",
+			"Codexa local registry is empty.",
+			"\nRun", cmdStyle.Render(), "to download snippets.",
 		)
 
 	return lipgloss.JoinVertical(
