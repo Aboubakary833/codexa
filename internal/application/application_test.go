@@ -88,7 +88,7 @@ func TestMethodsWithRepositoriesCall(t *testing.T) {
 		}
 
 		content := "This is slices entry content"
-		registry.On("LoadContent", ctx, entry).Return(content, nil).Once()
+		registry.On("LoadSnippet", ctx, entry).Return(content, nil).Once()
 
 		res, err := app.GetSnippetContent(ctx, entry)
 
