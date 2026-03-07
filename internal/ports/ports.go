@@ -18,9 +18,12 @@ type Application interface {
 type TechRepository interface {
 	// Store store a tech category
 	Store(context.Context, domain.Tech) error
-
+	
 	// FindAll return all tech categories
 	FindAll(context.Context) ([]domain.Tech, error)
+	
+	// FindByID retrieve a single tech category
+	FindByID(context.Context, string) (domain.Tech, error)
 
 	// Retrieve a tech category by ID, name or alias
 	Retrieve(context.Context, string) (domain.Tech, error)
@@ -33,6 +36,9 @@ type SnippetRepository interface {
 	// Store store a snippet entry
 	Store(context.Context, domain.Snippet) error
 
+	// FindByID retrieve a snippet by ID
+	FindByID(context.Context, string) (domain.Snippet, error)
+
 	// FindAll return all the available snippet entries
 	FindAll(context.Context) ([]domain.Snippet, error)
 
@@ -44,11 +50,32 @@ type SnippetRepository interface {
 
 	// Search query and return entries that match the given tech category and topic
 	Search(ctx context.Context, tech, topic string) ([]domain.Snippet, error)
+
+	// CreateOrUpdate update a given snippet if it exists, otherwise it create a new one
+	CreateOrUpdate(context.Context, *domain.Snippet) error
+
+	// Update update a given snippet
+	Update(context.Context, *domain.Snippet) error
+
+	// Delete remove a snippet
+	Delete(context.Context, domain.Snippet) error
 }
 
 type Registry interface {
-	// LoadContent load and return a snippet content
-	LoadContent(context.Context, domain.Snippet) (string, error)
+	// CreateOrUpdateSnippet create or update a snippet content
+	CreateOrUpdateSnippet(ctx context.Context, path, content string) error
+
+	// LoadSnippet load and return a snippet content
+	LoadSnippet(context.Context, domain.Snippet) (string, error)
+
+	// GetManifest return the cached version of the registry manifest
+	GetManifest(context.Context) (domain.CachedManifest, error)
+
+	// CreateOrUpdateManifest create or update the cached version of the registry manifest
+	CreateOrUpdateManifest(context.Context, domain.CachedManifest) error
+
+	// Stat check if the registry exists
+	Stat() error
 }
 
 type Fetcher interface {
