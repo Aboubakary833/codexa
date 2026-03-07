@@ -20,6 +20,16 @@ func (repo *techRepository) Store(ctx context.Context, tech domain.Tech) error {
 	return args.Error(0)
 }
 
+func (repo *techRepository) FindByID(ctx context.Context, ID string) (domain.Tech, error) {
+	args := repo.Called(ctx, ID)
+	
+	if args.Get(0) == nil {
+		return domain.Tech{}, args.Error(1)
+	}
+
+	return args.Get(0).(domain.Tech), nil
+}
+
 func (repo *techRepository) FindAll(ctx context.Context) ([]domain.Tech, error) {
 	args := repo.Called(ctx)
 
