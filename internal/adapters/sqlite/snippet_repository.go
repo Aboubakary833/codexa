@@ -47,9 +47,32 @@ func (repo *snippetRepository) Store(ctx context.Context, snippet domain.Snippet
 	return err
 }
 
+func (repo *snippetRepository) FindByID(ctx context.Context, ID string) (domain.Snippet, error) {
+	query := `
+		SELECT id, tech_id, topic, filepath, created_at, updated_at
+		FROM snippets WHERE id = ?;
+	`
+
+	snippet := domain.Snippet{}
+
+	if err := repo.db.QueryRowContext(ctx, query, ID).Scan(
+		&snippet.ID, &snippet.TechID, &snippet.Topic,
+		&snippet.Filepath, &snippet.CreatedAt, &snippet.UpdatedAt,
+	); err != nil {
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Snippet{}, domain.ErrSnippetNotFound
+		}
+
+		return domain.Snippet{}, err
+	}
+
+	return snippet, nil
+}
+
 // FindAll retrieve all the stored snippet entries
 func (repo *snippetRepository) FindAll(ctx context.Context) ([]domain.Snippet, error) {
-	query := "SELECT * FROM snippets;"
+	query := "SELECT id, tech_id, topic, filepath, created_at, updated_at FROM snippets;"
 	rows, err := repo.db.QueryContext(ctx, query)
 
 	if err != nil {
@@ -145,6 +168,44 @@ func (repo *snippetRepository) Search(ctx context.Context, tech, topic string) (
 
 	defer rows.Close()
 	return repo.getEntriesFromRows(rows)
+}
+
+// CreateOrUpdate update a snippet if it exists, otherwise it create a new one
+func (repo *snippetRepository) CreateOrUpdate(ctx context.Context, snippet *domain.Snippet) error {
+	_, err := repo.FindByID(ctx, snippet.ID)
+
+	if err != nil && !errors.Is(err, domain.ErrSnippetNotFound) {
+		return err
+	}
+	
+	if err != nil {
+		snippet.CreatedAt = time.Now()
+		snippet.UpdatedAt = time.Now()
+		return repo.Store(ctx, *snippet)
+	}
+
+	return repo.Update(ctx, snippet)
+}
+
+// Update update a given snippet
+func (repo *snippetRepository) Update(ctx context.Context, snippet *domain.Snippet) error {
+	snippet.UpdatedAt = time.Now()
+
+	query := "UPDATE snippets SET topic = ?, filepath = ?, updated_at = ? WHERE id = ?;"
+	_, err := repo.db.ExecContext(
+		ctx, query, snippet.Topic, snippet.Filepath,
+		snippet.UpdatedAt, snippet.ID,
+	)
+
+	return err
+}
+
+// Delete delete a snippet
+func (repo *snippetRepository) Delete(ctx context.Context, snippet domain.Snippet) error {
+	query := "DELETE FROM snippets WHERE id = ?;"
+	_, err := repo.db.ExecContext(ctx, query, snippet.ID)
+
+	return err
 }
 
 // getEntriesFromRows map sql qery result rows into a slice of snippets

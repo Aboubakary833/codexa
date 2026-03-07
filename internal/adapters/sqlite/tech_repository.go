@@ -49,8 +49,25 @@ func (repo *techRepository) Store(ctx context.Context, tech domain.Tech) error {
 	})
 }
 
+func (repo *techRepository) FindByID(ctx context.Context, ID string) (domain.Tech, error) {
+	query := "SELECT id, name FROM techs WHERE id = ?;"
+	category := domain.Tech{}
+
+	if err := repo.db.QueryRowContext(ctx, query, ID).Scan(
+		&category.ID, &category.Name,
+		); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Tech{}, domain.ErrTechNotFound
+		}
+
+		return domain.Tech{}, err
+	}
+
+	return category, nil
+}
+
 func (repo *techRepository) FindAll(ctx context.Context) ([]domain.Tech, error) {
-	query := `SELECT id, name FROM techs;`
+	query := "SELECT id, name FROM techs;"
 	rows, err := repo.db.QueryContext(ctx, query)
 
 	if err != nil {

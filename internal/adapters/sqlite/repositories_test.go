@@ -113,11 +113,48 @@ func TestRepositories(t *testing.T) {
 		}
 	})
 
+	t.Run("techRepository FindByID should return correct tech categories", func(t *testing.T) {
+		tests := []struct {
+			id           string
+			expectedName string
+		}{
+			{
+				id:           "javascript",
+				expectedName: "JavaScript",
+			},
+			{
+				id:           "go",
+				expectedName: "Go",
+			},
+			{
+				id:           "php",
+				expectedName: "PHP",
+			},
+		}
+
+		for _, test := range tests {
+			category, err := techRepository.FindByID(ctx, test.id)
+
+			if assert.NoError(t, err) {
+				assert.Equal(t, test.expectedName, category.Name)
+			}
+		}
+	})
+
 	t.Run("techRepository GetAliases should return JavaScript category aliases", func(t *testing.T) {
 		aliases, err := techRepository.GetAliases(ctx, "javascript")
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, categories[1].Aliases, aliases)
+		}
+	})
+
+	t.Run("snippetRepository FindByID method should return go slices snippet", func(t *testing.T) {
+		expected := snippets[0]
+		actual, err := snippetRepository.FindByID(ctx, "go:slices")
+
+		if assert.NoError(t, err) {
+			assertEntriesEqual(t, expected, actual)
 		}
 	})
 
@@ -178,6 +215,19 @@ func TestRepositories(t *testing.T) {
 		}
 	})
 
+	t.Run("snippetRepository Update should update php classes snippet", func(t *testing.T) {
+		snippet := snippets[4]
+		snippet.Topic = "php Object oriented programming"
+		beforeUpdateAt := snippet.UpdatedAt
+
+		err := snippetRepository.Update(ctx, &snippet)
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, "php Object oriented programming", snippet.Topic)
+			assert.False(t, beforeUpdateAt.Equal(snippet.UpdatedAt))
+		}
+	})
+
 	t.Run("snippetRepository Search method should return Go slices snippet entry only", func(t *testing.T) {
 		expected := snippets[:1]
 		actual, err := snippetRepository.Search(ctx, "go", "slices")
@@ -186,6 +236,45 @@ func TestRepositories(t *testing.T) {
 			for i := range len(expected) {
 				assertEntriesEqual(t, expected[i], actual[i])
 			}
+		}
+	})
+
+	t.Run("snippetRepository CreateOrUpdate should create a new snippet", func(t *testing.T) {
+		snippet := &domain.Snippet{
+			ID: "go:context",
+			TechID: "go",
+			Topic: "Context",
+			Filepath: "go/context.md",
+		}
+
+		err := snippetRepository.CreateOrUpdate(ctx, snippet)
+
+		if assert.NoError(t, err) {
+			assert.False(t, snippet.CreatedAt.IsZero())
+			assert.False(t, snippet.UpdatedAt.IsZero())
+		}
+	})
+
+	t.Run("snippetRepository CreateOrUpdate method should update existing snippet", func(t *testing.T) {
+		snippet := snippets[5]
+		snippet.Topic = "php 8.1 enum"
+		beforeUpdateAt := snippet.UpdatedAt
+
+		err := snippetRepository.Update(ctx, &snippet)
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, "php 8.1 enum", snippet.Topic)
+			assert.False(t, beforeUpdateAt.Equal(snippet.UpdatedAt))
+		}
+	})
+
+	t.Run("snippetRepository Delete method should delete a snippet", func(t *testing.T) {
+		snippet := snippets[5]
+		err := snippetRepository.Delete(ctx, snippet)
+
+		if assert.NoError(t, err) {
+			_, err = snippetRepository.FindByID(ctx, snippet.ID)
+			assert.ErrorIs(t, err, domain.ErrSnippetNotFound)
 		}
 	})
 }
@@ -200,4 +289,3 @@ func assertEntriesEqual(t *testing.T, expected, actual domain.Snippet) bool {
 		assert.True(expected.CreatedAt.Equal(actual.CreatedAt)) &&
 		assert.True(expected.UpdatedAt.Equal(actual.UpdatedAt))
 }
-
