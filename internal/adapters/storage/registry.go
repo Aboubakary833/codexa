@@ -56,9 +56,9 @@ func (r *registry) LoadSnippet(ctx context.Context, snippet domain.Snippet) (str
 	return string(rawBytes), nil
 }
 
-// GetCachedManifest return a cached version of the Manifest.
+// GetManifest return a cached version of the Manifest.
 // If no manifest cache file exists, a new one will automatically be created.
-func (r *registry) GetCachedManifest(ctx context.Context) (domain.CachedManifest, error) {
+func (r *registry) GetManifest(ctx context.Context) (domain.CachedManifest, error) {
 	rawBytes, err := r.readFile("index.json")
 
 	if err != nil {
@@ -78,7 +78,7 @@ func (r *registry) GetCachedManifest(ctx context.Context) (domain.CachedManifest
 }
 
 
-func (r *registry) CreateOrUpdateCachedManifest(ctx context.Context, manifest domain.CachedManifest) error {
+func (r *registry) CreateOrUpdateManifest(ctx context.Context, manifest domain.CachedManifest) error {
 	file, err := r.openFile("index.json")
 
 	if err != nil {
