@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	title             = "About Codexa"
-	content           = "is a terminal-based application designed to help developers quickly access concise, practical code snippets and common development patterns,without the verbosity of traditional documentation."
+	aboutTitle             = "About Codexa"
+	aboutContent           = "is a terminal-based application designed to help developers quickly access concise, practical code snippets and common development patterns,without the verbosity of traditional documentation."
 	contribution      = "To contribute, visit one of the following urls:"
 	registryUrl       = "github.com/aboubakary833/cx-registry"
 	sourceCodeRepoUrl = "github.com/aboubakary833/codexa"
@@ -101,12 +101,12 @@ func (m AboutModel) helpView() string {
 func (m AboutModel) View() string {
 	var sections []string
 
-	sections = append(sections, aboutTitleStyle.Render(title))
+	sections = append(sections, aboutTitleStyle.Render(aboutTitle))
 	availableHeight := m.height - lipgloss.Height(m.helpView())
 
 	containerStyle := lipgloss.NewStyle().Width(defaultWidth).Height(availableHeight).Padding(defaultPadding)
 	styledName := lipgloss.NewStyle().Foreground(styles.PrimaryColor).Render("Codexa")
-	styledDesc := lipgloss.NewStyle().Foreground(styles.TextColor).Render(content)
+	styledDesc := lipgloss.NewStyle().Foreground(styles.TextColor).Render(aboutContent)
 
 	desc := fmt.Sprintf("%s %s", styledName, styledDesc)
 	contribute := fmt.Sprintf(

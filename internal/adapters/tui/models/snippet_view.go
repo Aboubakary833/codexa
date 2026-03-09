@@ -102,21 +102,13 @@ type SnippetViewModel struct {
 
 func NewSnippetViewModel(tech, topic, content string) SnippetViewModel {
 
-	markdown, err := glamourRender(content)
-
-	// in case where we got error, we ignore it. We would not like
-	// to stop snippet rendering because styling failed, do we?
-	if err != nil {
-		markdown = content
-	}
-
 	return SnippetViewModel{
 		width:  100,
 		height: viewportMaxWidth,
 
 		tech:    tech,
 		topic:   topic,
-		content: markdown,
+		content: content,
 
 		ready: false,
 
@@ -157,18 +149,23 @@ func (m SnippetViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.width = msg.Width
 		m.height = msg.Height
-		viewportWidth = min(msg.Width, viewportMaxWidth)
+		viewportWidth = min(msg.Width, 80)
 
 		if !m.ready {
 			m.viewport = viewport.New(viewportWidth, msg.Height-verticalMarginHeight)
 			m.viewport.YPosition = headerHeight
-
-			m.viewport.SetContent(m.content)
 			m.ready = true
 		} else {
 			m.viewport.Width = viewportWidth
 			m.viewport.Height = msg.Height - verticalMarginHeight
 		}
+
+		markdown, err := m.glamourRender(m.content)
+		if err != nil {
+			markdown = m.content
+		}
+
+		m.viewport.SetContent(markdown)
 
 		if m.width < 50 {
 			m.viewport.SetHorizontalStep(1)
@@ -256,9 +253,9 @@ func (m SnippetViewModel) View() string {
 
 // glamourRender instantiate a new term renderer and render
 // given content with custom stylesheet
-func glamourRender(content string) (string, error) {
+func (m SnippetViewModel) glamourRender(content string) (string, error) {
 	styles := glamour.WithStyles(styles.GetRendererStyles())
-	renderer, err := glamour.NewTermRenderer(styles)
+	renderer, err := glamour.NewTermRenderer(styles, glamour.WithWordWrap(m.viewport.Width-2))
 
 	if err != nil {
 		return "", err
