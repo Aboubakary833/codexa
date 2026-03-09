@@ -90,7 +90,23 @@ func GetSnippets() []domain.Snippet {
 	return s
 }
 
-// GetRemoteCategories return all test tech categories
+// GetTechSnippets return a given category of snippets
+func GetTechSnippets(techID string) []domain.Snippet {
+	var (
+		allSnippets = GetSnippets()
+		snippets    []domain.Snippet
+	)
+
+	for _, s := range allSnippets {
+		if strings.HasPrefix(s.ID, strings.ToLower(techID)) {
+			snippets = append(snippets, s)
+		}
+	}
+
+	return snippets
+}
+
+// GetRemoteCategories return all test remote tech categories
 func GetRemoteCategories() []domain.RemoteTech {
 	var rts []domain.RemoteTech
 
@@ -104,34 +120,3 @@ func GetRemoteCategories() []domain.RemoteTech {
 	return rts
 }
 
-// GetRemoteSnippets return all test remote snippets
-func GetAllRemoteSnippets() []domain.RemoteSnippet {
-	var rs []domain.RemoteSnippet
-
-	for _, snippet := range snippets {
-		filename := strings.Split(snippet.ID, ":")[1] + ".md"
-		rs = append(rs, domain.RemoteSnippet{
-			ID:       snippet.ID,
-			Topic:    snippet.Topic,
-			Filename: filename,
-		})
-	}
-
-	return rs
-}
-
-// GetTechRemoteSnippets return a slice of remote snippets for a given tech category
-func GetTechRemoteSnippets(techName string) []domain.RemoteSnippet {
-	var (
-		allSnippets = GetAllRemoteSnippets()
-		snippets    []domain.RemoteSnippet
-	)
-
-	for _, s := range allSnippets {
-		if strings.HasPrefix(s.ID, strings.ToLower(techName)) {
-			snippets = append(snippets, s)
-		}
-	}
-
-	return snippets
-}

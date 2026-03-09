@@ -100,6 +100,8 @@ func NewSearchModel() SearchModel {
 	resultList.InfiniteScrolling = false
 
 	return SearchModel{
+		width: viewportMaxWidth,
+		height: 100,
 		input:        searchInput,
 		list:         resultList,
 		listDelegate: delegate,

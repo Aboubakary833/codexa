@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -25,6 +24,7 @@ func NewCommandWrapper(application ports.Application, errLogger *slog.Logger) Co
 	cw := CommandWrapper{
 		controller: controller{
 			app: application,
+			logger: errLogger,
 		},
 		rootCmd: rootCmd,
 	}
@@ -32,6 +32,7 @@ func NewCommandWrapper(application ports.Application, errLogger *slog.Logger) Co
 	// Register available commands
 	cw.registerRunCmd()
 	cw.registerOpenCmd()
+	cw.registerSyncCmd()
 
 	return cw
 }
@@ -59,12 +60,12 @@ func (cw CommandWrapper) registerOpenCmd() {
 
 	cmd := &cobra.Command{
 		Use:   "open",
-		Short: "Open a snippet or a category list of snippets",
-		Long:  "Open a given snippet content or list snippets for a given category",
+		Short: "Open a snippet or a list of snippets of category x",
+		Long:  "Open a given snippet content or list snippets for a given tech category",
 		Example: `	codexa open php
-	codexa open js array
-	codexa open -c=typescript
-	codexa open -c go -t slices
+	codexa open js debounce
+	codexa open -c=javascript
+	codexa open -c go -t context-timeout
 	codexa open --category javascript
 	codexa open --category=go --topic=maps`,
 		Args: cobra.MaximumNArgs(2),
@@ -96,8 +97,54 @@ func (cw CommandWrapper) registerOpenCmd() {
 			})
 		},
 	}
-	cmd.Flags().StringVarP(&category, "category", "c", "", "specify category")
-	cmd.Flags().StringVarP(&topic, "topic", "t", "", "specify topic")
+	cmd.Flags().StringVarP(&category, "category", "c", "", "specify tech category")
+	cmd.Flags().StringVarP(&topic, "topic", "t", "", "specify snippet topic")
+
+	cw.rootCmd.AddCommand(cmd)
+}
+
+// registerSyncCmd register the command for downloading/updating snippets
+func (cw CommandWrapper) registerSyncCmd() {
+	var category, id string
+
+	cmd := &cobra.Command{
+		Use:   "sync",
+		Short: "Sync add or update a snippet or a set of snippets",
+		Long:  "Sync create or update a snippet or a given tech category snippets",
+		Example: ` codexa sync javascript
+	codexa sync -c go
+	codexa sync -c=js -id=debounce
+	codexa sync --category go
+	codexa sync --category=js --identifier=deep-clone`,
+		Args: cobra.MaximumNArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			if category == "" && len(args) >= 1 {
+				category = args[0]
+			}
+
+			if category == "" {
+				cmd.Usage()
+				return
+			}
+
+			if id == "" && len(args) == 2 {
+				id = args[1]
+			}
+
+			if id == "" {
+				cw.Exec(func() error {
+					return cw.controller.syncTechCategory(category)
+				})
+				return
+			}
+
+			cw.Exec(func() error {
+				return cw.controller.syncSnippet(category, id)
+			})
+		},
+	}
+	cmd.Flags().StringVarP(&category, "category", "c", "", "specify the tech category")
+	cmd.Flags().StringVarP(&id, "identifier", "i", "", "specify the snippet identifier")
 
 	cw.rootCmd.AddCommand(cmd)
 }
@@ -109,11 +156,6 @@ func (cw CommandWrapper) Exec(fn func() error) {
 		return
 	}
 
-	if errors.Is(err, internalError) || errors.Is(err, timeoutError) {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
 	fmt.Println(err.Error())
-	os.Exit(0)
+	os.Exit(1)
 }

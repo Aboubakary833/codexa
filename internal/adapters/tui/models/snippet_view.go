@@ -112,7 +112,7 @@ func NewSnippetViewModel(tech, topic, content string) SnippetViewModel {
 
 	return SnippetViewModel{
 		width:  100,
-		height: 60,
+		height: viewportMaxWidth,
 
 		tech:    tech,
 		topic:   topic,

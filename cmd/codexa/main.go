@@ -2,11 +2,11 @@ package main
 
 import (
 	"log"
-	"log/slog"
 	"os"
 	"path"
 
 	"github.com/aboubakary833/codexa/internal/adapters/cli"
+	"github.com/aboubakary833/codexa/internal/adapters/remote"
 	"github.com/aboubakary833/codexa/internal/adapters/sqlite"
 	"github.com/aboubakary833/codexa/internal/adapters/storage"
 	"github.com/aboubakary833/codexa/internal/application"
@@ -37,12 +37,17 @@ func main() {
 	}
 	defer db.Close()
 
+	logger := bootstrapper.InitLogger()
+
+	registry := storage.NewRegistry(config.LocalRegistryPath())
+	fetcher := remote.NewFetcher(config.RemoteRegistryPath())
 	snippetRepository := sqlite.NewSnippetRepository(db)
 	techRepository := sqlite.NewTechRepository(db)
-	registry := storage.NewRegistry(config.LocalRegistryPath())
 
-	app := application.New(snippetRepository, techRepository, registry)
-	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
+	app := application.New(
+		snippetRepository, techRepository,
+		registry, fetcher,
+	)
 
 	cli.NewCommandWrapper(app, logger).Execute()
 }

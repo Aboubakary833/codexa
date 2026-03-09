@@ -1,17 +1,18 @@
 package tui
 
 import (
+	"log/slog"
+
 	"github.com/aboubakary833/codexa/internal/adapters/tui/common"
 	"github.com/aboubakary833/codexa/internal/adapters/tui/models"
 	"github.com/aboubakary833/codexa/internal/ports"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// InternalErrorMsg report when an unexpected error occur
-type InternalErrorMsg struct{}
-
-// TimeoutErrorMsg report when a timeout occur
-type TimeoutErrorMsg struct{}
+// ErrorMsg report when an unexpected error occur
+type ErrorMsg struct{
+	Error error
+}
 
 // rootModel is the TUI entry point. It is the model responsible
 // of the inter-model navigation and error-handling when browsing.
@@ -21,8 +22,8 @@ type rootModel struct {
 	history      *history
 }
 
-func New(app ports.Application, initialModel tea.Model) rootModel {
-	controller := newController(app)
+func New(app ports.Application, initialModel tea.Model, logger *slog.Logger) rootModel {
+	controller := newController(app, logger)
 
 	if initialModel == nil {
 		initialModel = models.NewHomeModel()
@@ -78,6 +79,10 @@ func (m rootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case common.NavigateToPrevMsg:
 		return m.SetPreviousModel()
+
+	case ErrorMsg:
+		errMsgString := msg.Error.Error()
+		return m.SetCurrentModel(models.NewErrorModel(errMsgString))
 	}
 
 	var cmd tea.Cmd
@@ -116,8 +121,8 @@ func (m rootModel) View() string {
 }
 
 // Run initializes a new Program with rootModel and run it. Return the final model.
-func Run(app ports.Application, initialModel tea.Model) (returnModel tea.Model, err error) {
-	m := New(app, initialModel)
+func Run(app ports.Application, initialModel tea.Model, logger *slog.Logger) (returnModel tea.Model, err error) {
+	m := New(app, initialModel, logger)
 
 	return tea.NewProgram(
 		m, tea.WithAltScreen(),

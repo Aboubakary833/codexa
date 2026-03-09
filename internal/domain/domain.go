@@ -11,9 +11,7 @@ var (
 	ErrSnippetNotFound  = errors.New("snippet is not found")
 	ErrRegistryNotFound = errors.New("no registry dir found")
 
-	ErrManifestNotFound      = errors.New("manifest is not found")
-	ErrRemoteTechNotFound    = errors.New("remote tech category not found")
-	ErrRemoteSnippetNotFound = errors.New("remote snippet not found")
+	ErrManifestNotFound   = errors.New("manifest is not found")
 
 	ErrCachedManifestNotFound   = errors.New("cached manifest file is not found")
 	ErrSnippetContentNotFound   = errors.New("snippet target file don't exists")
@@ -34,14 +32,23 @@ type TechAlias struct {
 }
 
 type Snippet struct {
-	// Identifier composed of tech category ID + topic in lowercase(ex: go:channels)
-	ID     string
-	TechID string
-	// The actual entry topic(ex: channels, slice, map)
-	Topic     string
-	Filepath  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        string    `json:"id"`
+	TechID    string    `json:"tech_id,omitempty"`
+	Topic     string    `json:"topic"`
+	Filepath  string    `json:"filepath,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+}
+
+// Match check if the given topic match the snippet
+func (s Snippet) Match(topic string) bool {
+	name := strings.Split(s.ID, ":")[1]
+	
+	if strings.EqualFold(name, topic) || strings.EqualFold(s.Topic, topic) {
+		return true
+	}
+	
+	return false
 }
 
 type RemoteTech struct {
@@ -49,7 +56,7 @@ type RemoteTech struct {
 	Dirname string `json:"dirname"`
 }
 
-// Match check if a given tech category name match the current tech category
+// Match check if the given name match the tech category
 func (rt RemoteTech) Match(name string) bool {
 	if strings.EqualFold(rt.Name, name) {
 		return true
@@ -64,20 +71,6 @@ func (rt RemoteTech) Match(name string) bool {
 	return false
 }
 
-type RemoteSnippet struct {
-	ID       string `json:"id"`
-	Topic    string `json:"topic"`
-	Filename string `json:"filename"`
-}
-
-func (rs RemoteSnippet) Match(topic string) bool {
-	if strings.EqualFold(rs.ID, topic) || strings.EqualFold(rs.Topic, topic) {
-		return true
-	}
-
-	return strings.Contains(strings.ToLower(rs.Filename), topic)
-}
-
 type Manifest struct {
 	Version string       `json:"version"`
 	Techs   []RemoteTech `json:"techs"`
@@ -90,7 +83,7 @@ type CachedManifest struct {
 
 // IsTrustWorthy check if the cached manifest has'nt expired and not empty
 func (cm CachedManifest) IsTrustWorthy() bool {
-	expirationTime := cm.UpdatedAt.Add(time.Minute*30)
+	expirationTime := cm.UpdatedAt.Add(time.Minute * 30)
 	if cm.UpdatedAt.IsZero() || expirationTime.Before(time.Now()) {
 		return false
 	}

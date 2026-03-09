@@ -13,6 +13,12 @@ type Application interface {
 	ListSnippets(ctx context.Context, techID string) ([]domain.Snippet, error)
 	GetSnippetContent(context.Context, domain.Snippet) (string, error)
 	Search(ctx context.Context, input string) ([]domain.Snippet, error)
+
+	Sync(context.Context, domain.RemoteTech, ...domain.Snippet) error
+	SyncSnippet(context.Context, domain.RemoteTech, domain.Snippet) error
+	FindRemoteTechCategory(ctx context.Context, tech string) (domain.RemoteTech, error)
+	ListRemoteTechSnippets(ctx context.Context, rt domain.RemoteTech) ([]domain.Snippet, error)
+	ListRemoteTechCategories(ctx context.Context) ([]domain.RemoteTech, error)
 }
 
 type TechRepository interface {
@@ -72,7 +78,7 @@ type Registry interface {
 	GetManifest(context.Context) (domain.CachedManifest, error)
 
 	// CreateOrUpdateManifest create or update the cached version of the registry manifest
-	CreateOrUpdateManifest(context.Context, domain.CachedManifest) error
+	CreateOrUpdateManifest(context.Context, domain.Manifest) error
 
 	// Stat check if the registry exists
 	Stat() error
@@ -83,7 +89,7 @@ type Fetcher interface {
 	PullManifest(context.Context) (domain.Manifest, error)
 
 	// PullTechSnippets pull a given tech category snippets list from the remote repository
-	PullTechSnippets(context.Context, string) ([]domain.RemoteSnippet, error)
+	PullTechSnippets(context.Context, string) ([]domain.Snippet, error)
 
 	// PullSnippetContent pull a specific snippet content from the remote registry
 	PullSnippetContent(ctx context.Context, snippetPath string) (string, error)

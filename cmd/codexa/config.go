@@ -38,3 +38,7 @@ func (cfg Config) LocalRegistryPath() string {
 func (cfg Config) RemoteRegistryPath() string {
 	return remoteRegistryUrl
 }
+
+func (cfg Config) LogFilePath() string {
+	return filepath.Join(cfg.rootPath, "logs.log")
+}

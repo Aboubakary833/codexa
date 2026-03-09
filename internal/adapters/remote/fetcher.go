@@ -9,27 +9,35 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"time"
 
 	"github.com/aboubakary833/codexa/internal/domain"
+	"github.com/aboubakary833/codexa/utils"
 )
+
+type remoteSnippet struct {
+	ID       string `json:"id"`
+	Topic    string `json:"topic"`
+	Filename string `json:"filename"`
+}
 
 type fetcher struct {
 	url    string
 	client *http.Client
 }
 
-func NewFetcher(remoteUrl string) fetcher {
-	return fetcher{
+func NewFetcher(remoteUrl string) *fetcher {
+	return &fetcher{
 		url: remoteUrl,
 		client: &http.Client{
-			Timeout: time.Second * 10,
+			Timeout: time.Second * 30,
 		},
 	}
 }
 
 // PullManifest get remote registry manifest
-func (f fetcher) PullManifest(ctx context.Context) (domain.Manifest, error) {
+func (f *fetcher) PullManifest(ctx context.Context) (domain.Manifest, error) {
 	res, err := f.doHttpGetRequest(ctx, "/registry.json", domain.ErrManifestNotFound)
 
 	if err != nil {
@@ -47,28 +55,37 @@ func (f fetcher) PullManifest(ctx context.Context) (domain.Manifest, error) {
 	return manifest, nil
 }
 
-func (f fetcher) PullTechSnippets(ctx context.Context, tech string) ([]domain.RemoteSnippet, error) {
-	path := fmt.Sprintf("/%s/index.json", tech)
-	res, err := f.doHttpGetRequest(ctx, path, domain.ErrRemoteTechNotFound)
+func (f *fetcher) PullTechSnippets(ctx context.Context, dirname string) ([]domain.Snippet, error) {
+	path := fmt.Sprintf("/%s/index.json", dirname)
+	res, err := f.doHttpGetRequest(ctx, path, domain.ErrTechNotFound)
 
 	if err != nil {
-		return []domain.RemoteSnippet{}, err
+		return []domain.Snippet{}, err
 	}
 	defer res.Body.Close()
 
 	decoder := json.NewDecoder(res.Body)
-	var snippets []domain.RemoteSnippet
+	var rs []remoteSnippet
 
-	if err = decoder.Decode(&snippets); err != nil {
-		return []domain.RemoteSnippet{}, err
+	if err = decoder.Decode(&rs); err != nil {
+		return []domain.Snippet{}, err
 	}
+
+	snippets := utils.Mutate(rs, func(i remoteSnippet) domain.Snippet {
+		path := filepath.Join(dirname, i.Filename)
+		return domain.Snippet{
+			ID: i.ID,
+			Topic: i.Topic,
+			Filepath: path,
+		}
+	})
 
 	return snippets, nil
 }
 
 // PullSnippetContent pull a specific snippet content from the remote registry
-func (f fetcher) PullSnippetContent(ctx context.Context, snippetUrl string) (string, error) {
-	res, err := f.doHttpGetRequest(ctx, snippetUrl, domain.ErrRemoteSnippetNotFound)
+func (f *fetcher) PullSnippetContent(ctx context.Context, snippetUrl string) (string, error) {
+	res, err := f.doHttpGetRequest(ctx, snippetUrl, domain.ErrSnippetNotFound)
 
 	if err != nil {
 		return "", err
@@ -85,7 +102,7 @@ func (f fetcher) PullSnippetContent(ctx context.Context, snippetUrl string) (str
 }
 
 // doHttpGetRequest is a util function for fetcher http GET requests
-func (f fetcher) doHttpGetRequest(ctx context.Context, path string, notFoundError error) (*http.Response, error) {
+func (f *fetcher) doHttpGetRequest(ctx context.Context, path string, notFoundError error) (*http.Response, error) {
 	url, err := url.JoinPath(f.url, path)
 
 	if err != nil {

@@ -3,6 +3,8 @@ package tui
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
 
 	"github.com/aboubakary833/codexa/internal/adapters/tui/models"
 	"github.com/aboubakary833/codexa/internal/domain"
@@ -13,12 +15,14 @@ import (
 
 type controller struct {
 	app ports.Application
+	logger *slog.Logger
 }
 
 // newController return a new controller for the rootModel
-func newController(application ports.Application) controller {
+func newController(application ports.Application, logger *slog.Logger) controller {
 	return controller{
 		app: application,
+		logger :logger,
 	}
 }
 
@@ -103,13 +107,19 @@ func (c controller) sendErrorCmd(err error) tea.Cmd {
 
 	if errors.Is(err, context.DeadlineExceeded) {
 		return func() tea.Msg {
-			return TimeoutErrorMsg{}
+			return ErrorMsg{
+				Error: fmt.Errorf("Request timed out"),
+			}
 		}
 	}
 
-	//NOTE: Log unknown error message to stderr
+	if c.logger != nil {
+		c.logger.Error(err.Error())
+	}
 
 	return func() tea.Msg {
-		return InternalErrorMsg{}
+		return ErrorMsg{
+			Error: err,
+		}
 	}
 }

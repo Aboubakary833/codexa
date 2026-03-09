@@ -39,3 +39,13 @@ func UcFirst(s string) string {
 	r[0] = unicode.ToUpper(r[0])
 	return string(r)
 }
+
+// Mutate take a slice of type S and transform it into a slice of type T
+func Mutate[S, T any](s []S, fn func(S) T) []T {
+	var result []T
+	for _, i := range s {
+		result = append(result, fn(i))
+	}
+
+	return result
+}

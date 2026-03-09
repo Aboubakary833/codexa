@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/aboubakary833/codexa/internal/domain"
@@ -31,11 +32,16 @@ func TestFetcher(t *testing.T) {
 	})
 
 	t.Run("PullTechSnippets should successfully fetch snippets for a specific tech category", func(t *testing.T) {
-		expected := testutils.GetTechRemoteSnippets("go")
+		expected := testutils.GetTechSnippets("go")
 		actual, err := fetcher.PullTechSnippets(ctx, "go")
+		length := len(actual)
 
-		if assert.NoError(t, err) {
-			assert.Equal(t, expected, actual)
+		if assert.NoError(t, err) && assert.Equal(t, len(expected), length) {
+			for i := range length {
+				assert.Equal(t, expected[i].ID, actual[i].ID)
+				assert.Equal(t, expected[i].Topic, actual[i].Topic)
+				assert.Equal(t, expected[i].Filepath, actual[i].Filepath)
+			}
 		}
 	})
 
@@ -44,13 +50,13 @@ func TestFetcher(t *testing.T) {
 
 		for _, arg := range args {
 			_, err := fetcher.PullTechSnippets(ctx, arg)
-			assert.ErrorIs(t, err, domain.ErrRemoteTechNotFound)
+			assert.ErrorIs(t, err, domain.ErrTechNotFound)
 		}
 	})
 
 	t.Run("PullSnippetContent should successfully fetch snippet content", func(t *testing.T) {
-		tests := []struct{
-			url string
+		tests := []struct {
+			url           string
 			resultContent string
 		}{
 			{"/go/slices.md", "Go slices snippet content"},
@@ -73,8 +79,8 @@ func newRemoteTestServer() *httptest.Server {
 	mux.HandleFunc("GET /registry.json", func(w http.ResponseWriter, r *http.Request) {
 		techCategories := testutils.GetRemoteCategories()
 		manifest := domain.Manifest{
-			Version:    "1.0",
-			Techs: techCategories,
+			Version: "1.0",
+			Techs:   techCategories,
 		}
 
 		writeJson(w, manifest)
@@ -88,7 +94,7 @@ func newRemoteTestServer() *httptest.Server {
 			return
 		}
 
-		snippets := testutils.GetTechRemoteSnippets(tech)
+		snippets := getTechRemoteSnippets(tech)
 
 		if len(snippets) == 0 {
 			http.NotFound(w, r)
@@ -100,8 +106,8 @@ func newRemoteTestServer() *httptest.Server {
 
 	mux.HandleFunc("GET /{tech}/{snippet}", func(w http.ResponseWriter, r *http.Request) {
 		registry := map[string]string{
-			"go/slices.md": "Go slices snippet content",
-			"php/classes.md": "PHP classes snippet content",
+			"go/slices.md":          "Go slices snippet content",
+			"php/classes.md":        "PHP classes snippet content",
 			"javascript/objects.md": "JavaScript objects snippet content",
 		}
 
@@ -126,8 +132,6 @@ func newRemoteTestServer() *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-
-
 // writeJson is a helper function that encode a value "v" into the response body
 func writeJson(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -143,4 +147,20 @@ func writeJson(w http.ResponseWriter, v any) {
 			`, err.Error(),
 		)
 	}
+}
+
+func getTechRemoteSnippets(techID string) []remoteSnippet {
+	snippets := testutils.GetTechSnippets(techID)
+	var rs []remoteSnippet
+
+	for _, snippet := range snippets {
+		filename := strings.Split(snippet.ID, ":")[1] + ".md"
+		rs = append(rs, remoteSnippet{
+			ID:       snippet.ID,
+			Topic:    snippet.Topic,
+			Filename: filename,
+		})
+	}
+
+	return rs
 }

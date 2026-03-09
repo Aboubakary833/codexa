@@ -51,6 +51,8 @@ func NewEntries(tech domain.Tech, snippets []domain.Snippet) SnippetsListModel {
 	list.AdditionalShortHelpKeys = listkeyMap.ShortKeys
 
 	return SnippetsListModel{
+		width: viewportMaxWidth,
+		height: 100,
 		list:             list,
 		additionalKeyMap: listkeyMap,
 	}

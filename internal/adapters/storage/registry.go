@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/aboubakary833/codexa/internal/domain"
 )
@@ -78,15 +79,21 @@ func (r *registry) GetManifest(ctx context.Context) (domain.CachedManifest, erro
 }
 
 
-func (r *registry) CreateOrUpdateManifest(ctx context.Context, manifest domain.CachedManifest) error {
+func (r *registry) CreateOrUpdateManifest(ctx context.Context, manifest domain.Manifest) error {
 	file, err := r.openFile("index.json")
 
 	if err != nil {
 		return err
 	}
+	defer file.Close()
+	
+	cachedManifest := domain.CachedManifest{
+		Manifest: manifest,
+		UpdatedAt: time.Now(),
+	}
 
 	encoder := json.NewEncoder(file)
-	return encoder.Encode(manifest)
+	return encoder.Encode(cachedManifest)
 }
 
 // Stat check if the registry exists and is a directory.
@@ -120,7 +127,14 @@ func (r *registry) readFile(path string) ([]byte, error) {
 // If the given file does'nt exist, it will be automatically be created.
 func (r *registry) openFile(path string) (*os.File, error) {
 	filePath := r.getFileFullPath(path)
-	return os.OpenFile(filePath, os.O_RDWR | os.O_CREATE | os.O_TRUNC, os.ModePerm)
+	
+	err := os.MkdirAll(filepath.Dir(filePath), 0755)
+	
+	if err != nil {
+		return nil, err
+	}
+
+	return os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
 }
 
 func (r *registry) getFileFullPath(path string) string {

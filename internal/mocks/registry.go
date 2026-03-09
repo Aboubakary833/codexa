@@ -36,7 +36,7 @@ func (registry *Registry) GetManifest(ctx context.Context) (domain.CachedManifes
 	return args.Get(0).(domain.CachedManifest), nil
 }
 
-func (registry *Registry) CreateOrUpdateManifest(ctx context.Context, manifest domain.CachedManifest) error {
+func (registry *Registry) CreateOrUpdateManifest(ctx context.Context, manifest domain.Manifest) error {
 	args := registry.Called(ctx, manifest)
 	return args.Error(0)
 }

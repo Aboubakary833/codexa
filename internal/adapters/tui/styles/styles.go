@@ -13,6 +13,7 @@ var (
 	SecondaryColor = lipgloss.AdaptiveColor{Light: "#f7d88cff", Dark: "#ad7e0aff"}
 	TextColor      = lipgloss.AdaptiveColor{Light: "#2e2e2e", Dark: "#dddddd"}
 	DimmedColor    = lipgloss.AdaptiveColor{Light: "#555555ff", Dark: "#A49FA5"}
+	ErrorColor	   = lipgloss.AdaptiveColor{Light: "#dd4040ff", Dark: "#ef5656ff"}
 )
 
 var (

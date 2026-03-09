@@ -3,10 +3,8 @@ package application
 import (
 	"context"
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/aboubakary833/codexa/internal/domain"
 	"github.com/aboubakary833/codexa/internal/ports"
@@ -17,18 +15,20 @@ type app struct {
 	snippetRepository ports.SnippetRepository
 	techRepository    ports.TechRepository
 	registry          ports.Registry
-	fetcher			  ports.Fetcher
+	fetcher           ports.Fetcher
 }
 
 func New(
 	snippetRepository ports.SnippetRepository,
 	techRepository ports.TechRepository,
 	registry ports.Registry,
+	fetcher ports.Fetcher,
 ) *app {
 	return &app{
 		snippetRepository: snippetRepository,
 		techRepository:    techRepository,
 		registry:          registry,
+		fetcher:           fetcher,
 	}
 }
 
@@ -90,19 +90,17 @@ func (app *app) Search(ctx context.Context, input string) ([]domain.Snippet, err
 	return app.snippetRepository.Search(ctx, tech, topic)
 }
 
-// Download create or update one or more snippets. The function also create
+// Sync create or update one or more snippets. The function also create
 // the tech category if it does'nt exists
-func (app *app) Download(ctx context.Context, rt domain.RemoteTech, snippets ...domain.RemoteSnippet) error {
+func (app *app) Sync(ctx context.Context, rt domain.RemoteTech, snippets ...domain.Snippet) error {
 	_, err := app.techRepository.FindByID(ctx, rt.ID)
 
 	if err != nil && !errors.Is(err, domain.ErrTechNotFound) {
 		return err
 	}
 
-	tech := rt.Tech
-
 	if err != nil {
-		err = app.techRepository.Store(ctx, tech)
+		err = app.techRepository.Store(ctx, rt.Tech)
 
 		if err != nil {
 			return err
@@ -111,38 +109,32 @@ func (app *app) Download(ctx context.Context, rt domain.RemoteTech, snippets ...
 	g, gCtx := errgroup.WithContext(ctx)
 	g.SetLimit(5)
 
-	for _, rs := range snippets {
-		g.Go(func () error {
-			return app.downloadSnippet(gCtx, rt, rs)
+	for _, snippet := range snippets {
+		g.Go(func() error {
+			return app.SyncSnippet(gCtx, rt, snippet)
 		})
 	}
 
 	return g.Wait()
 }
 
-// downloadSnippet is a helper function to Download syncing a snippet
-func (app *app) downloadSnippet(ctx context.Context, rt  domain.RemoteTech, rs domain.RemoteSnippet) error {
-	remotePath := fmt.Sprintf("%s/%s", rt.Dirname, rs.Filename)
+// SyncSnippet is a helper function for  downloading a snippet from the remote registry
+func (app *app) SyncSnippet(ctx context.Context, rt domain.RemoteTech, snippet domain.Snippet) error {
+	remotePath := filepath.ToSlash(snippet.Filepath)
 	content, err := app.fetcher.PullSnippetContent(ctx, remotePath)
 
 	if err != nil {
 		return err
 	}
+	
+	snippet.TechID = rt.ID
 
-	filePath := filepath.Join(rt.Dirname, rs.Filename)
-	snippet := &domain.Snippet{
-		ID: rs.ID,
-		TechID: rt.ID,
-		Topic: rs.Topic,
-		Filepath: filePath,
-	}
-
-	if err = app.snippetRepository.CreateOrUpdate(ctx, snippet); err != nil {
+	if err = app.snippetRepository.CreateOrUpdate(ctx, &snippet); err != nil {
 		return err
 	}
 
-	if err = app.registry.CreateOrUpdateSnippet(ctx, filePath, content); err != nil {
-		app.snippetRepository.Delete(ctx, *snippet)
+	if err = app.registry.CreateOrUpdateSnippet(ctx, snippet.Filepath, content); err != nil {
+		app.snippetRepository.Delete(ctx, snippet)
 		return err
 	}
 
@@ -163,52 +155,23 @@ func (app *app) FindRemoteTechCategory(ctx context.Context, tech string) (domain
 		}
 	}
 
-	return domain.RemoteTech{}, domain.ErrRemoteTechNotFound
+	return domain.RemoteTech{}, domain.ErrTechNotFound
 }
-
-
-// FindRemoteSnippet retrieve a single remote snippet
-func (app *app) FindRemoteSnippet(ctx context.Context, tech, topic string) (domain.RemoteSnippet, error) {
-	rt, err := app.FindRemoteTechCategory(ctx, tech)
-
-	if err != nil {
-		if errors.Is(err, domain.ErrRemoteTechNotFound) {
-			return domain.RemoteSnippet{}, domain.ErrRemoteSnippetNotFound
-		}
-
-		return domain.RemoteSnippet{}, err
-	}
-
-	snippets, err := app.ListRemoteTechSnippets(ctx, rt)
-
-	if err != nil {
-		return domain.RemoteSnippet{}, err
-	}
-
-	for _, snippet := range snippets {
-		if snippet.Match(topic) {
-			return snippet, nil
-		}
-	}
-
-	return domain.RemoteSnippet{}, domain.ErrRemoteSnippetNotFound
-}
-
 
 // ListRemoteTechSnippets fetch and return a given remote tech category snippets
-func (app *app) ListRemoteTechSnippets(ctx context.Context, rt domain.RemoteTech) ([]domain.RemoteSnippet, error) {
+func (app *app) ListRemoteTechSnippets(ctx context.Context, rt domain.RemoteTech) ([]domain.Snippet, error) {
 	snippets, err := app.fetcher.PullTechSnippets(ctx, rt.Dirname)
 
 	if err != nil {
-		return []domain.RemoteSnippet{}, err
+		return []domain.Snippet{}, err
 	}
 
 	return snippets, nil
 }
 
-// ListRemoteTechCategories fetch and return remote tech categories
+// ListRemoteTechCategories return remote tech categories
 func (app *app) ListRemoteTechCategories(ctx context.Context) ([]domain.RemoteTech, error) {
-	var manifest domain.Manifest 
+	var manifest domain.Manifest
 	cachedManifest, err := app.registry.GetManifest(ctx)
 
 	if err != nil && !errors.Is(err, domain.ErrCachedManifestNotFound) {
@@ -224,12 +187,7 @@ func (app *app) ListRemoteTechCategories(ctx context.Context) ([]domain.RemoteTe
 			return []domain.RemoteTech{}, err
 		}
 		
-		cachedManifest = domain.CachedManifest{
-			Manifest: manifest,
-			UpdatedAt: time.Now(),
-		}
-
-		app.registry.CreateOrUpdateManifest(ctx, cachedManifest)
+		app.registry.CreateOrUpdateManifest(ctx, manifest)
 
 	} else {
 		manifest = cachedManifest.Manifest

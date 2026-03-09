@@ -49,7 +49,7 @@ type AboutModel struct {
 func NewAboutModel() AboutModel {
 	return AboutModel{
 		width:  100,
-		height: 60,
+		height: viewportMaxWidth,
 		help:   help.New(),
 	}
 }

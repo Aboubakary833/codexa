@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"log/slog"
 	"os"
 	"slices"
 
@@ -33,6 +34,17 @@ func (b Bootstrapper) Setup() error {
 	}
 
 	return nil
+}
+
+// InitLogger init the Codexa system logger
+func (b Bootstrapper) InitLogger() *slog.Logger {
+	logFile, err := os.Open(b.cfg.LogFilePath())
+
+	if err != nil {
+		logFile = os.Stderr
+	}
+
+	return slog.New(slog.NewJSONHandler(logFile, nil))
 }
 
 // initDB open the database connection and make sure all required tables are migrated.
@@ -77,7 +89,7 @@ func (b Bootstrapper) ensureDirExist(path string) error {
 	// In case err is ErrNotExists or the file is not a dir,
 	// it create a new root directory.
 	if err != nil || !info.IsDir() {
-		return os.Mkdir(path, os.ModePerm)
+		return os.Mkdir(path, 0755)
 	}
 
 	return nil

@@ -53,6 +53,8 @@ func NewTechsListModel(techs []domain.Tech) TechsListModel {
 	list.AdditionalShortHelpKeys = listkeyMap.ShortKeys
 
 	return TechsListModel{
+		width: viewportMaxWidth,
+		height: 100,
 		list: list,
 		additionalKeyMap: listkeyMap,
 	}
