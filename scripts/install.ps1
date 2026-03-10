@@ -1,10 +1,10 @@
 $version = $args[0] | ForEach-Object { if ($_){$_} else {"latest"} }
 $binName = "codexa.exe"
 $installDir = "$env:LOCALAPPDATA\Programs\Codexa"
-$tmpDir = New-Item -ItemType Directory -Path ([System.IO.Path]::GetTempPath() + [System.Guid]::NewGuid())
-
+$tmpDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.Guid]::NewGuid().ToString())
 
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
 
 # Download
 if ($version -eq "latest") {
@@ -22,19 +22,27 @@ Invoke-WebRequest -Uri $url -OutFile "$tmpDir\codexa.zip"
 Write-Host "Extracting..."
 Expand-Archive -Path "$tmpDir\codexa.zip" -DestinationPath $tmpDir
 
+# Find the extracted binary automatically
+$binaryPath = Get-ChildItem -Path $tmpDir -Filter "codexa*.exe" -Recurse | Select-Object -First 1
+if (-not $binaryPath) {
+    Write-Error "No codexa executable found after extraction"
+    exit 1
+}
+
 # Installation
-Move-Item -Path "$tmpDir\codexa.exe" -Destination "$installDir\$binName" -Force
+Move-Item -Path $binaryPath.FullName -Destination "$installDir\$binName" -Force
 
 # Add codexa to PATH
 if (-not ($env:PATH -split ";" | Where-Object { $_ -eq $installDir })) {
     [Environment]::SetEnvironmentVariable("PATH", "$installDir;$env:PATH", "User")
+    $env:PATH = "$installDir;$env:PATH"
     Write-Host "Added Codexa to PATH. Restart your shell to use it."
 }
 
-# Generate codexa PowerShell ompletions
+# Generate PowerShell completions
 Write-Host "Generating PowerShell completion..."
 $completionScript = "$installDir\codexa-completion.ps1"
-$null = "$installDir\$binName" completion powershell > $completionScript
+& "$installDir\$binName" completion powershell > $completionScript
 if (-not (Select-String -Path $PROFILE -Pattern "codexa-completion.ps1" -Quiet)) {
     Add-Content -Path $PROFILE -Value ". '$completionScript'"
 }

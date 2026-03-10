@@ -10,12 +10,15 @@ TMP_DIR=$(mktemp -d)
 mkdir -p "$INSTALL_DIR"
 
 echo "Downloading Codexa $VERSION..."
+
 if [ "$VERSION" = "latest" ]; then
+    OS=$(uname | tr '[:upper:]' '[:lower:]')
     URL=$(curl -s https://api.github.com/repos/aboubakary833/codexa/releases/latest \
-        | grep "browser_download_url.*linux_amd64.tar.gz" \
+        | grep "browser_download_url.*${OS}_amd64.tar.gz" \
         | cut -d '"' -f 4)
 else
-    URL="https://github.com/aboubakary833/codexa/releases/download/$VERSION/codexa_${VERSION}_linux_amd64.tar.gz"
+    OS=$(uname | tr '[:upper:]' '[:lower:]')
+    URL="https://github.com/aboubakary833/codexa/releases/download/$VERSION/codexa_${OS}_amd64.tar.gz"
 fi
 
 curl -L "$URL" -o "$TMP_DIR/codexa.tar.gz"
@@ -23,11 +26,18 @@ curl -L "$URL" -o "$TMP_DIR/codexa.tar.gz"
 echo "Extracting..."
 tar -xzf "$TMP_DIR/codexa.tar.gz" -C "$TMP_DIR"
 
+# Find extracted binary
+BINARY_PATH=$(find "$TMP_DIR" -type f -name "codexa*" | head -n1)
+if [ -z "$BINARY_PATH" ]; then
+    echo "Error: no binary found after extraction"
+    exit 1
+fi
+
 echo "Installing binary..."
-mv "$TMP_DIR/codexa" "$INSTALL_DIR/$BIN_NAME"
+mv "$BINARY_PATH" "$INSTALL_DIR/$BIN_NAME"
 chmod +x "$INSTALL_DIR/$BIN_NAME"
 
-# Add codexa to PATH
+# Add codexa to PATH if not already present
 if ! echo "$PATH" | grep -q "$INSTALL_DIR"; then
     SHELL_RC=""
     case "$SHELL" in
@@ -41,10 +51,11 @@ if ! echo "$PATH" | grep -q "$INSTALL_DIR"; then
     echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$SHELL_RC"
 fi
 
-# Generating completions
+# Generating shell completions
 echo "Generating shell completions..."
 case "$SHELL" in
     */bash)
+        mkdir -p "$HOME/.local/share/bash-completion/completions"
         "$INSTALL_DIR/$BIN_NAME" completion bash > "$HOME/.local/share/bash-completion/completions/codexa"
         ;;
     */zsh)
