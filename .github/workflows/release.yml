@@ -5,6 +5,12 @@ on:
         tags:
             - "v*.*.*"
 
+permissions:
+    contents: write
+    id-token: write
+    packages: write
+    attestations: write
+
 jobs:
     release:
         runs-on: ubuntu-latest
@@ -13,6 +19,6 @@ jobs:
             - uses: goreleaser/goreleaser-action@v4
               with:
                   version: latest
-                  args: release
+                  args: release --clean
               env:
                   GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}

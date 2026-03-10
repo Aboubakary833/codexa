@@ -16,12 +16,11 @@ builds:
       - -s -w -X main.version={{.Version}}
 
 archives:
-  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    files:
-      - "codexa"
-      - "scripts/install.sh"
-      - "scripts/install.ps1"
-    formats: [ 'tar.gz' ]
+  - formats: [tar.gz]
+    wrap_in_directory: true
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    builds_info:
+      mtime: "{{ .CommitTimestamp }}"
     format_overrides:
       - goos: windows
         formats: [ 'zip' ]
