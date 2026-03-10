@@ -21,10 +21,10 @@ archives:
       - "codexa"
       - "scripts/install.sh"
       - "scripts/install.ps1"
-    format: tar.gz
+    formats: [ 'tar.gz' ]
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [ 'zip' ]
 
 checksum:
   name_template: checksums.txt
