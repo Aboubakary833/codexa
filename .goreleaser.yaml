@@ -1,0 +1,35 @@
+version: 2
+
+project_name: codexa
+
+builds:
+  - main: ./cmd/codexa
+    binary: codexa
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - "codexa"
+      - "scripts/install.sh"
+      - "scripts/install.ps1"
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  github:
+    owner: aboubakary833
+    name: codexa

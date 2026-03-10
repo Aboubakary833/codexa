@@ -17,30 +17,25 @@ Codexa focuses on:
 
 The goal is not to teach from scratch, but to **refresh your memory quickly and efficiently**.
 
----
+## Installation
 
-## What Codexa is (and isn’t)
+### Linux / macOS
 
-**Codexa is:**
-- A terminal-native knowledge tool
-- A curated collection of code snippets and patterns
-- Optimized for fast lookup and readability
+```bash
+curl -sSf https://raw.githubusercontent.com/aboubakary833/codexa/main/scripts/install.sh | bash
+```
 
-**Codexa is not:**
-- A full documentation replacement
-- A tutorial platform
-- A command reference like `tldr`
+### Windows (PowerShell)
 
----
+```pwsh
+iwr https://raw.githubusercontent.com/aboubakary833/codexa/main/scripts/install.ps1 -UseBasicParsing | iex
+```
 
-## Example use cases
+This will:
 
-- Quickly recall how to safely copy a slice in Go
-- Review common Git undo patterns
-- Refresh backend concepts like JWT access and refresh tokens
-- Browse short code patterns without leaving the terminal
-
----
+- Download the latest Codexa release
+- Install the binary in a folder added to your PATH
+- Install shell completions automatically for bash, zsh, fish, or PowerShell
 
 ## Design philosophy
 
@@ -49,9 +44,10 @@ The goal is not to teach from scratch, but to **refresh your memory quickly and 
 - Readable over clever
 - Offline-first
 
+<p>
 Every snippet is intentionally short and focused on real-world usage.
-
----
+To contribute to snippets visit: <a href="https://github.com/aboubakary833/cx-registry">Codexa snippets registry repository</a>
+</p>
 
 ## Status
 

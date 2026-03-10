@@ -12,14 +12,29 @@ import (
 type CommandWrapper struct {
 	rootCmd    *cobra.Command
 	controller controller
+	appVersion string
 }
 
-func NewCommandWrapper(application ports.Application, errLogger *slog.Logger) CommandWrapper {
+func NewCommandWrapper(
+	application ports.Application,
+	appVersion	string,
+	errLogger *slog.Logger,
+	) CommandWrapper {
 	rootCmd := &cobra.Command{
 		Use:   "codexa",
 		Short: "Codexa is a concise and descriptive snippets app.",
 		Long:  "A simple terminal-based app designed to help devs quickly access pratical snippets.",
 	}
+
+	rootCmd.AddCommand(&cobra.Command{
+        Use:   "version",
+        Short: "Print the version number of Codexa",
+        Run: func(cmd *cobra.Command, args []string) {
+            fmt.Println("Codexa version:", appVersion)
+        },
+    })
+
+	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
 	cw := CommandWrapper{
 		controller: controller{

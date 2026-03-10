@@ -13,7 +13,10 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var rootDirName = ".codexa"
+var (
+	Version		= "dev"
+	rootDirName = ".codexa"
+)
 
 func main() {
 	homePath, err := os.UserHomeDir()
@@ -49,5 +52,5 @@ func main() {
 		registry, fetcher,
 	)
 
-	cli.NewCommandWrapper(app, logger).Execute()
+	cli.NewCommandWrapper(app, Version, logger).Execute()
 }
