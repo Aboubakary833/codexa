@@ -126,7 +126,7 @@ func (cw CommandWrapper) registerSyncCmd() {
 		Use:   "sync",
 		Short: "Sync add or update a snippet or a set of snippets",
 		Long:  "Sync create or update a snippet or a given tech category snippets",
-		Example: ` codexa sync javascript
+		Example: `	codexa sync javascript
 	codexa sync -c go
 	codexa sync -c=js -id=debounce
 	codexa sync --category go
