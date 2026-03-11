@@ -213,7 +213,7 @@ func (m SnippetViewModel) headerView() string {
 func (m SnippetViewModel) footerView() string {
 
 	scrollPercentStr := fmt.Sprintf("scroll:%3.f%%", m.viewport.ScrollPercent()*100)
-	helpView := m.help.ShortHelpView(m.ShortHelp())
+	helpView := lipgloss.NewStyle().MarginLeft(2).Render(m.help.ShortHelpView(m.ShortHelp()))
 	scrollInfoView := entryScrollInfoStyle.Render(scrollPercentStr)
 
 	if m.width < 50 {

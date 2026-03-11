@@ -22,7 +22,7 @@ var (
 
 const (
 	defaultWidth = 60
-	defaultPadding = 1
+	defaultPadding = 2
 )
 
 var (
