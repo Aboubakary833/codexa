@@ -15,7 +15,7 @@ type Application interface {
 	Search(ctx context.Context, input string) ([]domain.Snippet, error)
 
 	Sync(context.Context, domain.RemoteTech, ...domain.Snippet) error
-	SyncSnippet(context.Context, domain.RemoteTech, domain.Snippet) error
+	SyncSnippet(context.Context, domain.Snippet) error
 	FindRemoteTechCategory(ctx context.Context, tech string) (domain.RemoteTech, error)
 	ListRemoteTechSnippets(ctx context.Context, rt domain.RemoteTech) ([]domain.Snippet, error)
 	ListRemoteTechCategories(ctx context.Context) ([]domain.RemoteTech, error)

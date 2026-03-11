@@ -285,18 +285,9 @@ func TestSyncsMethod(t *testing.T) {
 	)
 	ctx := context.Background()
 
-	rt := domain.RemoteTech{
-		Tech: domain.Tech{
-			ID:   "go",
-			Name: "Go",
-			Aliases: []domain.TechAlias{
-				{ID: "golang", Name: "Golang"},
-			},
-		},
-		Dirname: "go",
-	}
 	s := domain.Snippet{
 		ID: "go:context",
+		TechID: "go",
 		Topic: "Go context",
 		Filepath: "go/context.md",
 	}
@@ -311,7 +302,7 @@ func TestSyncsMethod(t *testing.T) {
 		fetcher.On("PullSnippetContent", ctx, "go/context.md").Return(content, nil).Once()
 		registry.On("CreateOrUpdateSnippet", ctx, "go/context.md", content).Return(nil).Once()
 
-		if err := app.SyncSnippet(ctx, rt, s); assert.NoError(t, err) {
+		if err := app.SyncSnippet(ctx, s); assert.NoError(t, err) {
 			snippetRepository.AssertExpectations(t)
 			registry.AssertExpectations(t)
 			fetcher.AssertExpectations(t)
@@ -329,7 +320,7 @@ func TestSyncsMethod(t *testing.T) {
 		fetcher.On("PullSnippetContent", ctx, "go/context.md").Return(content, nil).Once()
 		registry.On("CreateOrUpdateSnippet", ctx, "go/context.md", content).Return(os.ErrPermission).Once()
 
-		err := app.SyncSnippet(ctx, rt, s)
+		err := app.SyncSnippet(ctx, s)
 
 		assert.ErrorIs(t, err, os.ErrPermission)
 		snippetRepository.AssertExpectations(t)

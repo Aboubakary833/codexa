@@ -111,7 +111,8 @@ func (app *app) Sync(ctx context.Context, rt domain.RemoteTech, snippets ...doma
 
 	for _, snippet := range snippets {
 		g.Go(func() error {
-			return app.SyncSnippet(gCtx, rt, snippet)
+			snippet.TechID = rt.ID
+			return app.SyncSnippet(gCtx, snippet)
 		})
 	}
 
@@ -119,15 +120,13 @@ func (app *app) Sync(ctx context.Context, rt domain.RemoteTech, snippets ...doma
 }
 
 // SyncSnippet is a helper function for  downloading a snippet from the remote registry
-func (app *app) SyncSnippet(ctx context.Context, rt domain.RemoteTech, snippet domain.Snippet) error {
+func (app *app) SyncSnippet(ctx context.Context, snippet domain.Snippet) error {
 	remotePath := filepath.ToSlash(snippet.Filepath)
 	content, err := app.fetcher.PullSnippetContent(ctx, remotePath)
 
 	if err != nil {
 		return err
 	}
-	
-	snippet.TechID = rt.ID
 
 	if err = app.snippetRepository.CreateOrUpdate(ctx, &snippet); err != nil {
 		return err
