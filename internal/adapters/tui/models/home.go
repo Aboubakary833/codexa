@@ -78,7 +78,7 @@ func NewHomeModel() HomeModel {
 }
 
 func (m HomeModel) Init() tea.Cmd {
-	return nil
+	return tea.SetWindowTitle("Codexa - Home")
 }
 
 func (m HomeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

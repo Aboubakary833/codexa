@@ -27,6 +27,8 @@ type TechSnippetsLoadedMsg struct {
 type SnippetsListModel struct {
 	width            int
 	height           int
+
+	tech			 domain.Tech
 	list             list.Model
 	additionalKeyMap common.ListAdditionalKeyMap
 }
@@ -53,13 +55,15 @@ func NewEntries(tech domain.Tech, snippets []domain.Snippet) SnippetsListModel {
 	return SnippetsListModel{
 		width: viewportMaxWidth,
 		height: 100,
+		tech: tech,
 		list:             list,
 		additionalKeyMap: listkeyMap,
 	}
 }
 
 func (m SnippetsListModel) Init() tea.Cmd {
-	return nil
+	title := fmt.Sprintf("%s snippets", m.tech.Name)
+	return tea.SetWindowTitle(title)
 }
 
 func (m SnippetsListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

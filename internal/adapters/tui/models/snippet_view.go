@@ -118,7 +118,8 @@ func NewSnippetViewModel(tech, topic, content string) SnippetViewModel {
 }
 
 func (m SnippetViewModel) Init() tea.Cmd {
-	return nil
+	title := fmt.Sprintf("Codexa - %s", m.Title())
+	return tea.SetWindowTitle(title)
 }
 
 func (m SnippetViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -141,23 +142,18 @@ func (m SnippetViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		var viewportWidth int
-
-		headerHeight := lipgloss.Height(m.headerView())
-		footerHeight := lipgloss.Height(m.footerView())
-		verticalMarginHeight := headerHeight + footerHeight
-
 		m.width = msg.Width
 		m.height = msg.Height
-		viewportWidth = min(msg.Width, 80)
+		viewportWidth := min(msg.Width, 80)
+		viewportVerticalMargin := m.ViewportVerticalMargin()
 
 		if !m.ready {
-			m.viewport = viewport.New(viewportWidth, msg.Height-verticalMarginHeight)
-			m.viewport.YPosition = headerHeight
+			m.viewport = viewport.New(viewportWidth, msg.Height-viewportVerticalMargin)
+			m.viewport.YPosition = lipgloss.Height(m.headerView())
 			m.ready = true
 		} else {
 			m.viewport.Width = viewportWidth
-			m.viewport.Height = msg.Height - verticalMarginHeight
+			m.viewport.Height = msg.Height - viewportVerticalMargin
 		}
 
 		markdown, err := m.glamourRender(m.content)
@@ -191,11 +187,22 @@ func (m SnippetViewModel) ShortHelp() []key.Binding {
 	}
 }
 
+func (m SnippetViewModel) ViewportVerticalMargin() int {
+	headerHeight := lipgloss.Height(m.headerView())
+	footerHeight := lipgloss.Height(m.footerView())
+
+	return headerHeight + footerHeight
+}
+
+func (m SnippetViewModel) Title() string {
+	title := fmt.Sprintf("%s:%s", m.tech, m.topic)
+	return strings.ToLower(title)
+}
+
 func (m SnippetViewModel) headerView() string {
-	text := fmt.Sprintf("%s:%s", m.tech, m.topic)
-	title := entryTitleStyle.Render(strings.ToLower(text))
+	title := entryTitleStyle.Render(strings.ToLower(m.Title()))
 	barWidth := m.viewport.Width - lipgloss.Width(title)
-	headerBar := lipgloss.NewStyle().Width(barWidth).Render()
+	headerBar := lipgloss.NewStyle().Width(barWidth).MaxWidth(m.width - 10).Render()
 
 	return lipgloss.JoinHorizontal(
 		lipgloss.Bottom,
@@ -230,19 +237,26 @@ func (m SnippetViewModel) footerView() string {
 	return lipgloss.JoinHorizontal(lipgloss.Left, helpView, whitespaces, scrollInfoView)
 }
 
+func (m SnippetViewModel) loadingView() string {
+	height := m.height - m.ViewportVerticalMargin()
+	width := m.viewport.Width
+
+	return lipgloss.NewStyle().Width(width).
+		Height(height).Render(
+		lipgloss.Place(
+			width, height, lipgloss.Center,
+			lipgloss.Center, entryLoadingTextStyle.String(),
+		),
+	)
+}
+
 func (m SnippetViewModel) View() string {
 	var container string
 
 	if m.ready {
 		container = m.viewport.View()
 	} else {
-		viewportHeight := m.viewport.Height
-		container = lipgloss.NewStyle().
-			Width(m.viewport.Width).Height(viewportHeight).
-			Render(lipgloss.Place(
-				m.viewport.Width, viewportHeight, lipgloss.Center,
-				lipgloss.Center, entryLoadingTextStyle.String(),
-			))
+		container = m.loadingView()
 	}
 
 	return lipgloss.JoinVertical(

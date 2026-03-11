@@ -110,7 +110,10 @@ func (m rootModel) SetPreviousModel() (tea.Model, tea.Cmd) {
 
 	if prevModel != nil {
 		m.currentModel = prevModel
-		return m, tea.WindowSize()
+		initCmd := m.currentModel.Init()
+		windowSizeCmd := tea.WindowSize()
+
+		return m, tea.Sequence(initCmd, windowSizeCmd)
 	}
 
 	return m, tea.Quit

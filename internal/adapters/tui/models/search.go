@@ -120,7 +120,12 @@ func NewSearchModel() SearchModel {
 }
 
 func (m SearchModel) Init() tea.Cmd {
-	return doSearch("")
+	query := m.input.Value()
+	
+	searchCmd := doSearch(query)
+	titleCmd := tea.SetWindowTitle("Codexa - Search")
+
+	return tea.Sequence(titleCmd, searchCmd)
 }
 
 func (m SearchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

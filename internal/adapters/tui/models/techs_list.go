@@ -61,7 +61,7 @@ func NewTechsListModel(techs []domain.Tech) TechsListModel {
 }
 
 func (m TechsListModel) Init() tea.Cmd {
-	return nil
+	return tea.SetWindowTitle("Codexa - Tech categories")
 }
 
 func (m TechsListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

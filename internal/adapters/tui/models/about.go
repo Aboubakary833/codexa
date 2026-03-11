@@ -55,7 +55,7 @@ func NewAboutModel() AboutModel {
 }
 
 func (m AboutModel) Init() tea.Cmd {
-	return nil
+	return tea.SetWindowTitle("Codexa - About")
 }
 
 func (m AboutModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

@@ -41,7 +41,7 @@ func NewErrorModel(message string) ErrorModel {
 }
 
 func (m ErrorModel) Init() tea.Cmd {
-	return tea.SetWindowTitle("Error")
+	return tea.SetWindowTitle("Codexa - Error")
 }
 
 func (m ErrorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
