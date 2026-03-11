@@ -79,7 +79,7 @@ func (c controller) syncSnippet(tech, snippetName string) error {
 		return err
 	}
 
-	s.Suffix = fmt.Sprintf("Searching for %s...", snippetName)
+	s.Suffix = fmt.Sprintf(" Searching for %s...", snippetName)
 	s.Restart()
 
 	rs, err := c.findRemoteSnippet(rt, snippetName)
@@ -90,7 +90,7 @@ func (c controller) syncSnippet(tech, snippetName string) error {
 	}
 
 	snippetPath := fmt.Sprintf("%s/%s", strings.ToLower(rt.Name), strings.ToLower(rs.Topic))
-	s.Suffix = "Pulling " + snippetPath + "..."
+	s.Suffix = " Pulling " + snippetPath + "..."
 	s.Restart()
 
 	err = c.download(rt, rs)
@@ -117,7 +117,7 @@ func (c controller) syncTechCategory(tech string) error {
 		return err
 	}
 
-	s.Suffix = fmt.Sprintf("Syncing %s...", rt.ID)
+	s.Suffix = fmt.Sprintf(" Syncing %s...", rt.ID)
 	s.Restart()
 
 	rs, err := c.listRemoteTechSnippets(rt)
@@ -127,7 +127,7 @@ func (c controller) syncTechCategory(tech string) error {
 		return err
 	}
 
-	s.Suffix = fmt.Sprintf("Pulling %s snippets(%d)...", rt.ID, len(rs))
+	s.Suffix = fmt.Sprintf(" Pulling %s snippets(%d)...", rt.ID, len(rs))
 	s.Restart()
 
 	err = c.download(rt, rs...)
