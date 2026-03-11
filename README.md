@@ -49,6 +49,36 @@ Every snippet is intentionally short and focused on real-world usage.
 To contribute to snippets visit: <a href="https://github.com/aboubakary833/cx-registry">Codexa snippets registry repository</a>
 </p>
 
+## Usage
+
+### Running in browsing mode
+
+To launch Codexa TUI run the following command:
+
+```sh
+codexa run
+```
+
+Or open a sipecific category of snippet, run:
+
+```sh
+codexa open js # [go|html|css]
+```
+
+### Downloading/Update snippets to local registry
+
+To install/update for example "Go" set of snippets, run:
+
+```sh
+codexa sync go
+```
+
+You can install/update a specific snippet (context with timeout for example) by running:
+
+```sh
+codexa sync go context-timeout
+```
+
 ## Status
 
 Codexa is an experimental project built as a learning and exploration tool.  
