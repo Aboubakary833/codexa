@@ -8,7 +8,9 @@ It is built for developers who want answers that go straight to the point.
 
 ## Demo video
 
-<video src="https://d1zjut2prn.ufs.sh/f/o1hduQKK5HXlrdvTVv8vfTLOpoxlR8jHSnwuzQg3mXbdkh46" width="600" controls></video>
+
+<video src="https://github.com/user-attachments/assets/3547d373-68d2-48cc-97bb-00fa944697b7" width="600"></video>
+
 
 ---
 
