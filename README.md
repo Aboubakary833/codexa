@@ -4,6 +4,12 @@
 
 It is built for developers who want answers that go straight to the point.
 
+
+
+## Demo video
+
+<video src="https://d1zjut2prn.ufs.sh/f/o1hduQKK5HXlrdvTVv8vfTLOpoxlR8jHSnwuzQg3mXbdkh46" width="600" controls></video>
+
 ---
 
 ## Why Codexa?
