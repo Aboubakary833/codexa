@@ -61,11 +61,18 @@ case "$SHELL" in
     */zsh)
         mkdir -p "$HOME/.zsh/completions"
         "$INSTALL_DIR/$BIN_NAME" completion zsh > "$HOME/.zsh/completions/_codexa"
+        echo 'fpath=(~/.zsh/completions $fpath)' >> ~/.zshrc
+        echo 'autoload -U compinit && compinit' >> ~/.zshrc
         ;;
     */fish)
         mkdir -p "$HOME/.config/fish/completions"
         "$INSTALL_DIR/$BIN_NAME" completion fish > "$HOME/.config/fish/completions/codexa.fish"
         ;;
 esac
+
+# Installing default categories of snippets
+echo "Installing javascript and go snippets"
+"$INSTALL_DIR/$BIN_NAME" sync js
+"$INSTALL_DIR/$BIN_NAME" sync go
 
 echo "Codexa installed successfully! Restart your shell."

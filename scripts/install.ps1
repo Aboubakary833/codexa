@@ -47,4 +47,9 @@ if (-not (Select-String -Path $PROFILE -Pattern "codexa-completion.ps1" -Quiet))
     Add-Content -Path $PROFILE -Value ". '$completionScript'"
 }
 
+# Installing default categories of snippets
+Write-Host "Installing javascript and go snippets"
+"$installDir\$binName" sync js
+"$installDir\$binName" sync go
+
 Write-Host "Codexa installed successfully! Restart PowerShell."
